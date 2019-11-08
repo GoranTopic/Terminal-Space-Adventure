@@ -1,0 +1,82 @@
+==9054== Memcheck, a memory error detector
+==9054== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==9054== Using Valgrind-3.12.0 and LibVEX; rerun with -h for copyright info
+==9054== Command: ./hash_table
+==9054== 
+==9054== Invalid write of size 1
+==9054==    at 0x4C30E27: strcpy (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x108EF7: htable_insert (htable.c:64)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054==  Address 0x52020e3 is 0 bytes after a block of size 3 alloc'd
+==9054==    at 0x4C2DB2F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x108B47: emalloc (mylib.c:9)
+==9054==    by 0x108EE0: htable_insert (htable.c:63)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054== 
+==9054== Invalid read of size 1
+==9054==    at 0x4C31DC4: strcmp (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x108F6A: htable_insert (htable.c:71)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054==  Address 0x5202133 is 0 bytes after a block of size 3 alloc'd
+==9054==    at 0x4C2DB2F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x108B47: emalloc (mylib.c:9)
+==9054==    by 0x108EE0: htable_insert (htable.c:63)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054== 
+==9054== Invalid read of size 1
+==9054==    at 0x4C31DC7: strcmp (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x108F6A: htable_insert (htable.c:71)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054==  Address 0x52023b3 is 0 bytes after a block of size 3 alloc'd
+==9054==    at 0x4C2DB2F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x108B47: emalloc (mylib.c:9)
+==9054==    by 0x108EE0: htable_insert (htable.c:63)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054== 
+==9054== Invalid read of size 1
+==9054==    at 0x4C31DC4: strcmp (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x109027: htable_insert (htable.c:87)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054==  Address 0x522cf89 is 0 bytes after a block of size 9 alloc'd
+==9054==    at 0x4C2DB2F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x108B47: emalloc (mylib.c:9)
+==9054==    by 0x108EE0: htable_insert (htable.c:63)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054== 
+==9054== Invalid read of size 1
+==9054==    at 0x4C31DC7: strcmp (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x109027: htable_insert (htable.c:87)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054==  Address 0x5247a19 is 0 bytes after a block of size 9 alloc'd
+==9054==    at 0x4C2DB2F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x108B47: emalloc (mylib.c:9)
+==9054==    by 0x108EE0: htable_insert (htable.c:63)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054== 
+==9054== Invalid read of size 1
+==9054==    at 0x4C30D34: strlen (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x4E89955: vfprintf (vfprintf.c:1637)
+==9054==    by 0x4E90506: fprintf (fprintf.c:32)
+==9054==    by 0x109109: htable_print (htable.c:102)
+==9054==    by 0x1091B7: main (main_htable.c:20)
+==9054==  Address 0x8d159a1 is 0 bytes after a block of size 1 alloc'd
+==9054==    at 0x4C2DB2F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==9054==    by 0x108B47: emalloc (mylib.c:9)
+==9054==    by 0x108EE0: htable_insert (htable.c:63)
+==9054==    by 0x109162: main (main_htable.c:11)
+==9054== 
+==9054== 
+==9054== HEAP SUMMARY:
+==9054==     in use at exit: 20,130,746 bytes in 563,720 blocks
+==9054==   total heap usage: 587,824 allocs, 24,104 frees, 29,177,550 bytes allocated
+==9054== 
+==9054== LEAK SUMMARY:
+==9054==    definitely lost: 2,385,594 bytes in 563,718 blocks
+==9054==    indirectly lost: 0 bytes in 0 blocks
+==9054==      possibly lost: 17,745,152 bytes in 2 blocks
+==9054==    still reachable: 0 bytes in 0 blocks
+==9054==         suppressed: 0 bytes in 0 blocks
+==9054== Rerun with --leak-check=full to see details of leaked memory
+==9054== 
+==9054== For counts of detected and suppressed errors, rerun with: -v
+==9054== ERROR SUMMARY: 1739357 errors from 6 contexts (suppressed: 0 from 0)
