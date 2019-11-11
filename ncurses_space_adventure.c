@@ -1,7 +1,7 @@
 /*
 	 A program for managing my writting using bash script. 
 	 It checks for a writting directory on the home folder and makes tres sub frolders 
-	 one fro poems, stories, and journal 
+	 one for poems, stories, and journal 
 	 for poems it they are named by number, and title.
 	 for stories they sorted by dirs with is the name of the story, and pages cana be added
 	 for jrl, it is also divided into difrent jrls and when selected it add to that jrl
