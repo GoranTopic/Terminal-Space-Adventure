@@ -319,6 +319,19 @@ void free_node(Node* node){
 	free(node);
 }
 
+void free_list(List* list){
+	/* free up the memory used in the whole of the list*/
+	Node* current = list->first;
+	Node* prev = current;
+	while(current->next != NULL){
+		prev = current;
+		current = current->next;
+		free_node(prev);
+	}
+	free_node(current);
+	free(list);
+}
+
 void append_list(List* list, Object* obj){
 		/* adds and obj to the list */
 		
@@ -504,7 +517,9 @@ int main(void) {
 	print_list(list);
 
 	print_obj(*(list_get_at(list, 0)));
+
+
+ 	free_list(list);
+
 	//it crashes when it reallocates mememory 
-
-
 }
