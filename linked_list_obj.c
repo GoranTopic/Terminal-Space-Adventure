@@ -39,9 +39,11 @@ void list_free(List* list){
 void list_append(List* list, Object* obj){
 		/* adds and obj to the list */
 		//make new node
+	
 		Node* new_node = malloc(sizeof(Node));
 		new_node->next = NULL;
 		new_node->obj = obj;
+		obj->parent_list = (List*)list;
 		if(list->count == 0){
 				list->first = new_node;
 		}else{

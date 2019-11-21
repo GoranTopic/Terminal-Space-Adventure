@@ -1,0 +1,94 @@
+/*
+	 A program for managing my writting using bash script. 
+	 It checks for a writting directory on the home folder and makes tres sub frolders 
+	 one for poems, stories, and journal 
+	 for poems it they are named by number, and title.
+	 for stories they sorted by dirs with is the name of the story, and pages cana be added
+	 for jrl, it is also divided into difrent jrls and when selected it add to that jrl
+	 by Goran Topic
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <ncurses.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <string.h>
+#include <sys/stat.h>
+
+int ncurses_start(void){
+		/* initialize an run ncurse*/
+
+		//the user sturcture
+		char ch;
+		int i = 0;
+
+		// ncruses initialation
+		initscr();              //start cruses mode
+		cbreak();               //be able to ctrl c break
+		keypad(stdscr, TRUE);   // enable key pad		
+		noecho();               //do not echo the input keys
+
+		//get the minimun and max size of the screen
+		int x_min = 0, y_min =0;
+		int x_max, y_max;
+		getmaxyx(stdscr, y_max, x_max); 
+
+
+		/* draw cirlce around window */
+		for(int x = 0; x < x_max; x++){
+				mvaddch(y_min   , x, '#');
+				mvaddch(y_max -1, x, '#');
+		}  
+		for(int y = 0; y < y_max; y++){
+				mvaddch( y, x_min   , '#');
+				mvaddch( y, x_max -1, '#');
+		}
+
+		char ship_drawing[3][7]  = { "  -/|", "<=[#]:",  "  -\\|"};
+		int draw_c = 3;
+		int direction;
+		int ship_speed = 3;
+		int ship_x = 3;
+		int ship_y =2;
+
+		int x_cor = x_max/2;
+		int y_cor = y_max/2;
+		char buff_str[255] = "Imanalla World";
+
+		while(ch != 'q'){
+
+				ch = getch();
+
+				
+				mvprintw(y_cor, x_cor, "%d was pressed", ch);
+
+
+				if(ch == 3){
+						mvprintw(y_cor, x_cor, "up was pressed");
+				}else if(ch == 4){ 	
+						mvprintw(y_cor, x_cor, "left was pressed");
+				}else if(ch == 5){ 	
+						mvprintw(y_cor, x_cor, "right was pressed");
+				}else if(ch == 2){ 	
+						mvprintw(y_cor, x_cor, "down was pressed");
+				}				
+
+				refresh(); //refresh screen 
+		}
+
+		endwin(); //end sescion 
+		return 0;
+}
+
+
+int main(void) {
+	
+		ncurses_start();
+
+}
+
+
+

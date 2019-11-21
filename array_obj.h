@@ -8,7 +8,7 @@ typedef struct Objects_Array{
 	int capacity;
 } Obj_arr;
 
-extern Obj_arr* make_obj_ar(void);
+extern Obj_arr* make_obj_ar(int size);
 extern void remove_obj_at(Obj_arr* array, int index);
 extern void append_obj(Obj_arr* array, Object* obj);
 extern void print_array(Obj_arr* array);

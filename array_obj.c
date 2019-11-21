@@ -11,10 +11,10 @@ becuase reallocation is not working
 	by Goran Topic
 */
 
-Obj_arr* make_obj_ar(void){
+Obj_arr* make_obj_ar(int size){
 	// make and array of Objects 
 	Obj_arr* arr = malloc(sizeof(Obj_arr));
-	arr->capacity = 5;
+	arr->capacity = size;
 	arr->objs = calloc(arr->capacity, sizeof(Object));
 	arr->count = 0;
 	return arr;
@@ -28,24 +28,23 @@ void remove_obj_at(Obj_arr* array, int index){
 			return;
 		}else if ( index == array->count - 1){
 			//remove last element 
-			//free_obj( &(array->objs[array->count -1]));
+			free_obj( &(array->objs[array->count -1]));
 			array->count--;
 			return;
 		}else{
 				Object last = array->objs[array->count - 1];
 				array->objs[index] = last;
-				//free_obj( &(array->objs[array->count - 1]) );
+				free_obj( &(array->objs[array->count - 1]) );
 				array->count--;
 		}
 }
 
 void append_obj(Obj_arr* array, Object* obj){
 	// appends a obj to the array of Objs 
-	if(array->count >= array->capacity){
+	if(array->count >= array->capacity)
 	//it it reaches capacity then get more
-		array->capacity *= 2;
-		array->objs =  realloc(array->objs, array->capacity);
-	}	
+		printf("Could not append obj max cap of: %d reached", array->capacity); 
+
 	array->objs[array->count] = *obj;
 	array->count++;
 }

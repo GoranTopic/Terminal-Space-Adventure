@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "objects.h"
+#include "linked_list_obj.h"
 
 /*
 	an Object library 	
@@ -15,21 +16,21 @@ void print_point(Point_ch p){
 
 }
 
-void print_obj(Object obj){
+void print_obj(Object* obj){
     /*prints obj from a given obj to std*/
-    printf("title: %s \n", obj.title); 
-    printf("life: %d \n", obj.life);
-    printf("speed: %d \n", obj.speed);
+    printf("title: %s \n", obj->title); 
+    printf("life: %d \n", obj->life);
+    printf("speed: %d \n", obj->speed);
 
     //print model object
-    for(int line = 0; line < obj.model_c; line++){
-        printf("%s\n", obj.model[line]);
+    for(int line = 0; line < obj->model_c; line++){
+        printf("%s\n", obj->model[line]);
     }
 
     //print points 
     printf("Points:\n");
-    for(int i = 0; i < obj.points_c; i++){
-      print_point(obj.points[i]);
+    for(int i = 0; i < obj->points_c; i++){
+      print_point(obj->points[i]);
     } 
     printf("\n");
 }
@@ -50,8 +51,11 @@ Object* make_obj(char* title, char* model[], int model_c, int speed, Point_ch st
 	obj->speed = speed;
 
 	//set diection
-	obj->direction = 0;
+	obj->point_left = true;
 
+	//define pointer to parent list
+	obj->parent_list = NULL;
+	
 	//set life, while above 0, obj is alive
 	obj->life = 100;
 
@@ -83,8 +87,6 @@ Object* make_obj(char* title, char* model[], int model_c, int speed, Point_ch st
 
 	//alloc mem for the need points
 	obj->points = malloc(obj->points_c * sizeof(Point_ch));
-	
-
 
 	//make a char point for every char in string array, and store it in obj's mem
 	//excluding any space at the begining of the string
@@ -186,6 +188,46 @@ void move_obj(Object* obj, int direction){
         obj->points[i].y =  obj->points[i].y + ydlta;
         obj->points[i].x = obj->points[i].x + xdlta;
     }
+}
+
+
+void reposition_obj(Object* obj, Point_ch new_start){
+		/*
+			 overwites and reposistion the char points in
+			 the object basen on the new starting point 
+		 */ 
+
+		bool cutoff_space;
+		int point_c = 0;
+
+		obj->start.x = new_start.x;
+		obj->start.y = new_start.y;
+
+		//make a char point for every char in string array, and store it in obj's mem
+		//excluding any space at the begining of the string
+		for(int y = 0; y < obj->model_c; y++){
+				cutoff_space = false;
+				for(int x = 0; x < strlen(obj->model[y]); x++){
+						if(obj->model[y][x] != ' ') cutoff_space = true;
+						if(cutoff_space){
+								obj->points[point_c].x = new_start.x + x;
+								obj->points[point_c].y = new_start.y + y;
+								point_c++;
+						}
+				}
+		}
+}
+
+
+
+void switch_direction(Object* obj){
+		/*
+			 changes the direction in which an objec is meant to be
+			 true for point left, false for pointing right
+		 */
+		if(obj->point_left) obj->point_left = false;
+		else obj->point_left = true;
+
 }
 
 void kill_obj(Object* obj){

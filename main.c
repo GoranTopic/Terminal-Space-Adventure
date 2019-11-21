@@ -7,11 +7,16 @@
 #include <pthread.h>
 #include <time.h>
 #include "objects.h"
+#include "movement.h"
 #include "linked_list_obj.h"
+#include "array_obj.h"
+#include "enemies.h"
+
 /*
-	space game using c and Ncurses	
+	space game using c and Ncursesfor the terminal
  
 	by Goran Topic
+
 */
 
 void load_ships(void){
@@ -43,7 +48,7 @@ void load_ships(void){
 	char* model4[]  = {"  /\\",
 		           			 "-<[+]:",
 		          			 "  \\/"};
-	Point_ch start4 = { .x = 15, .y = 5, .ch = ' '};
+	Point_ch start4 = { .x = 7, .y = 5, .ch = ' '};
 	Object* quicky =  make_obj("quicky", model4, 3, 1, start4, "ship");
 
 
@@ -111,33 +116,6 @@ void render_obj_list(List* list){
 		}
 }
 
-void move_by_type(Object* obj){
-		/* it moves an objecst based on type */
-		if(strcmp(obj->title, "mauler") == 0){
-				if(obj->state < 80 ){
-						move_obj(obj, 90);	
-				}else if(obj->state > 80){
-						move_obj(obj, 270);	
-				}else if(obj->state == 160){
-						obj->state = 0;
-				}
-				obj->state++;
-		}else if(strcmp(obj->title, "falco") == 0){
-				if(obj->state < 80 ){
-						move_obj(obj, 270);	
-				}else if(obj->state > 80){
-						move_obj(obj, 90);	
-				}else if(obj->state == 160){
-						obj->state = 0;
-				}
-				obj->state++;
-		}else if(strcmp(obj->type, "bullet") == 0){
-				//printf("it moved\n");
-				move_obj(obj, 270);	
-				obj->life = obj->life - 2;
-		}
-		obj->state++;
-}
 
 void move_objs(List* list){
 	/*moves the objects acording the theri type */ 
@@ -166,7 +144,6 @@ void remove_the_dead(List* list){
 		Node* current = list->first;
 		Node* prev = current;
 		Node* doomed = current;	
-
 		while(true){
 				if(current->obj->life <= 0){
 						//node title found
@@ -211,6 +188,8 @@ void collide_action(Object* obj1, Object* obj2){
 				strcmp(obj2->type, "bullet") == 0;
 		bool has_player = strcmp(obj1->type, "player") == 0 ||
 				strcmp(obj2->type, "player") == 0;
+		bool has_enemy = strcmp(obj1->type, "enemy") == 0 ||
+				strcmp(obj2->type, "enemy") == 0;
 
 		if(has_ship && has_bullet){
 				//collition with ship and bullet
@@ -224,6 +203,10 @@ void collide_action(Object* obj1, Object* obj2){
 				//collition with a bullet and player
 				//obj1->life = 0;
 				//obj2->life = 0;
+		}else if(has_enemy && has_bullet){
+				//collition with a bullet and player
+				obj1->life = 0;
+				obj2->life = 0;
 		}else if(has_ship){
 				//collition with ship and ship
 				obj1->life = 0;
@@ -263,26 +246,27 @@ void collition_check(List* list){
 		}
 }
 
-void fire(List* list, Object* obj){
+void fire(Object* obj){
 	/* makes object fire a bullet which spans from the the ship */
-		
+		List* list = obj->parent_list;
+
 		if(strcmp(obj->type, "player") == 0){
-				char* model[]  = {"- "};
-				Point_ch start = { .x = obj->start.x + 1, .y = obj->start.y, .ch = ' '};
+				char* model[]  = {"-"};
+				Point_ch start = { .x = obj->start.x, .y = obj->start.y, .ch = ' '};
 				Object* bullet =  make_obj("fire1", model, 1, 1, start, "bullet");
 				list_append(list, bullet);
-				Point_ch start2 = { .x = obj->start.x + 1, .y = obj->start.y+2, .ch = ' '};
+				Point_ch start2 = { .x = obj->start.x, .y = obj->start.y+2, .ch = ' '};
 				bullet =  make_obj("fire1", model, 1, 1, start2, "bullet");
 				list_append(list, bullet);
 		}else if(strcmp(obj->type, "ship") == 0){
 				char* model[]  = {"-"};
-				Point_ch start = { .x = obj->start.x - 1, .y = obj->start.y + 1 , .ch = ' '};
+				Point_ch start = { .x = obj->start.x - 1 , .y = obj->start.y + 1 , .ch = ' '};
 				Object* bullet =  make_obj("fire1", model, 1, 1, start, "bullet");
 				list_append(list, bullet);
 		}
 }
 
-void* user_movement(void* vargp){
+void* player_movement(void* vargp){
 
 		List* list = (List*)vargp;
 		Object* ship = list_get_title(list, "ship");
@@ -290,20 +274,46 @@ void* user_movement(void* vargp){
     char ch;
 		while(true){
 				ch = getch();
-				if(ch == 's'){
+				if(ch == 2){
 						move_obj(ship, 180);
-				}else if(ch == 'w'){
+				}else if(ch == 3){
 						move_obj(ship, 360);
-				}else if(ch == 'a'){
+				}else if(ch == 4){
 						move_obj(ship, 270);
-				}else if(ch == 'd'){
+				}else if(ch == 5){
 						move_obj(ship, 90);
 				}else if(ch == ' '){
-						fire(list, ship);
+						fire(ship);
+				}else if(ch == KEY_LEFT){
+						move_obj(ship, 180);
 				}
 		}
 	return NULL;
 }
+
+
+
+#ifdef WIN32
+#include <windows.h>
+#elif _POSIX_C_SOURCE >= 199309L
+#include <time.h>   // for nanosleep
+#else
+#include <unistd.h> // for usleep
+#endif
+void sleep_ms(int milliseconds) // cross-platform sleep function
+{
+#ifdef WIN32
+    Sleep(milliseconds);
+#elif _POSIX_C_SOURCE >= 199309L
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#else
+    usleep(milliseconds * 1000);
+#endif
+}
+
 
 int ncurses_start(void){
 		//initialize an run ncurse
@@ -354,10 +364,8 @@ int ncurses_start(void){
 				"-<[+]:",
 				"  \\/"
 		};
-		Point_ch start4 = { .x = 40, .y = 20, .ch = ' '};
+		Point_ch start4 = { .x = 100, .y = 100, .ch = ' '};
 		Object* quicky =  make_obj("quicky", model4, 3, 1, start4, "ship");
-
-
 
 		List* list = list_make();
 		list_append(list, ship);
@@ -365,26 +373,47 @@ int ncurses_start(void){
 		list_append(list, quicky);
 		list_append(list, falco);
 		
-		//makje new thread for listeing to user inputs
+
+		
+		Point_ch new_start = { .x = 30, .y = 14, .ch = ' '};
+		reposition_obj(list_get_title(list, "quicky"), new_start);
+				
+		//make new thread which is listing for player inputs
 		pthread_t thread_id;
-		pthread_create(&thread_id, NULL, user_movement, list);
+		pthread_create(&thread_id, NULL, player_movement, list);
 
+		// create enemy
+		Obj_arr* enemies = load_enemies_ar();
+		//list_append(list, random_enemy(0,y_max, enemies));
+
+	
+		int timer  = 0;
 		while(true){
-
-				sleep(1);
 				
+				sleep_ms(70);
 				collition_check(list);
-				//move_by_type(mauler);
-				move_objs(list);
-				fire(list, quicky);
-				
+
 				remove_the_dead(list);		
+
+				
+				if(timer % 10 == 0)fire(quicky);
+
+				if(timer % 100 ==0)
+						list_append(list, random_enemy(0,y_max, enemies));
+
+
+				move_objs(list);
+				
 				
 				clear_screen();
 				
 				render_obj_list(list);
 				
 				refresh(); //refresh screen 
+	
+				if(timer > 10000) timer = 0;
+				else timer++;
+
 		}
 		endwin(); //end sescion 
 		return 0;
@@ -393,6 +422,9 @@ int ncurses_start(void){
 
 int main(void) {
 		
+		//Obj_arr* enemies = load_enemies_ar();
+		//print_obj(random_enemy(0,100, enemies));
+		//print_array(enemies);
 		ncurses_start();
 
 }
