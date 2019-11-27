@@ -274,7 +274,7 @@ void* player_movement(void* vargp){
     char ch;
 		while(true){
 				ch = getch();
-				if(ch == 2){
+				if(ch == 2 || ch == 'w'){
 						move_obj(ship, 180);
 				}else if(ch == 3){
 						move_obj(ship, 360);
@@ -396,11 +396,10 @@ int ncurses_start(void){
 				remove_the_dead(list);		
 
 				
-				if(timer % 10 == 0)fire(quicky);
+				if(timer % 10 == 0) fire(quicky);
 
-				if(timer % 100 ==0)
+				if(timer % 40 ==0)
 						list_append(list, random_enemy(0,y_max, enemies));
-
 
 				move_objs(list);
 				
