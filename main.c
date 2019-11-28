@@ -6,11 +6,21 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>
+#include <math.h>
 #include "objects.h"
 #include "movement.h"
 #include "linked_list_obj.h"
 #include "array_obj.h"
 #include "enemies.h"
+#include "portaudio.h"
+
+#ifdef __APPLE__
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#elif __linux
+#include <AL/al.h>
+#include <AL/alc.h>
+#endif
 
 /*
 	space game using c and Ncursesfor the terminal
@@ -19,8 +29,15 @@
 
 */
 
-void load_ships(void){
 
+#define NUMTHRDS 4
+pthread_t callThd[NUMTHRDS]; 
+pthread_mutex_t mutex;
+
+
+
+void load_ships(void){
+/* loads models for the ships */
 
 	char* model[]  = {  "  -/|",
 	                		"<=[#]:",
@@ -267,13 +284,16 @@ void fire(Object* obj){
 }
 
 void* player_movement(void* vargp){
-
+		
 		List* list = (List*)vargp;
 		Object* ship = list_get_title(list, "ship");
 
     char ch;
 		while(true){
 				ch = getch();
+				
+				//lock mutex
+				pthread_mutex_lock(&mutex); 
 				if(ch == 2 || ch == 'w'){
 						move_obj(ship, 180);
 				}else if(ch == 3){
@@ -286,7 +306,14 @@ void* player_movement(void* vargp){
 						fire(ship);
 				}else if(ch == KEY_LEFT){
 						move_obj(ship, 180);
+				}else if(ch == 'q'){
+						//exit game
 				}
+				//unlock mutex
+				pthread_mutex_unlock (&mutex);
+
+							
+
 		}
 	return NULL;
 }
@@ -327,6 +354,7 @@ int ncurses_start(void){
 		cbreak();               //be able to ctrl c break
 		keypad(stdscr, TRUE);   // enable key pad   
 		noecho();               //do not echo the input keys
+		curs_set(0);            //hide cursor
 
 		//get the minimun and max size of the screen
 		int x_min = 0, y_min =0;
@@ -374,13 +402,18 @@ int ncurses_start(void){
 		list_append(list, falco);
 		
 
-		
+
 		Point_ch new_start = { .x = 30, .y = 14, .ch = ' '};
 		reposition_obj(list_get_title(list, "quicky"), new_start);
 				
+
+
+		//initialize mutex for making chnages in th elist of objs
+		pthread_mutex_init(&mutex, NULL); 
 		//make new thread which is listing for player inputs
 		pthread_t thread_id;
 		pthread_create(&thread_id, NULL, player_movement, list);
+
 
 		// create enemy
 		Obj_arr* enemies = load_enemies_ar();
@@ -391,19 +424,20 @@ int ncurses_start(void){
 		while(true){
 				
 				sleep_ms(70);
-				collition_check(list);
 
-				remove_the_dead(list);		
-
+				//lock mutex
+				pthread_mutex_lock(&mutex); 
 				
+				collition_check(list);
+				remove_the_dead(list);						
 				if(timer % 10 == 0) fire(quicky);
-
 				if(timer % 40 ==0)
 						list_append(list, random_enemy(0,y_max, enemies));
-
 				move_objs(list);
 				
-				
+				//unlock mutex
+				pthread_mutex_unlock (&mutex);
+
 				clear_screen();
 				
 				render_obj_list(list);
@@ -419,11 +453,138 @@ int ncurses_start(void){
 }
 
 
+
+ALCdevice  * openal_output_device;
+ALCcontext * openal_output_context;
+
+ALuint internal_buffer;
+ALuint streaming_source[1];
+
+int al_check_error(const char * given_label) {
+
+    ALenum al_error;
+    al_error = alGetError();
+
+    if(AL_NO_ERROR != al_error) {
+
+        printf("ERROR - %s  (%s)\n", alGetString(al_error), given_label);
+        return al_error;
+    }
+    return 0;
+}
+
+void MM_init_al() {
+
+    const char * defname = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+
+    openal_output_device  = alcOpenDevice(defname);
+    openal_output_context = alcCreateContext(openal_output_device, NULL);
+    alcMakeContextCurrent(openal_output_context);
+
+    // setup buffer and source
+
+    alGenBuffers(1, & internal_buffer);
+    al_check_error("failed call to alGenBuffers");
+}
+
+void MM_exit_al() {
+
+    ALenum errorCode = 0;
+
+    // Stop the sources
+    alSourceStopv(1, & streaming_source[0]);        //      streaming_source
+    int ii;
+    for (ii = 0; ii < 1; ++ii) {
+        alSourcei(streaming_source[ii], AL_BUFFER, 0);
+    }
+    // Clean-up
+    alDeleteSources(1, &streaming_source[0]);
+    alDeleteBuffers(16, &streaming_source[0]);
+    errorCode = alGetError();
+    alcMakeContextCurrent(NULL);
+    errorCode = alGetError();
+    alcDestroyContext(openal_output_context);
+    alcCloseDevice(openal_output_device);
+}
+
+void MM_render_one_buffer() {
+
+    /* Fill buffer with Sine-Wave */
+    // float freq = 440.f;
+    float freq = 100.f;
+    float incr_freq = 0.1f;
+
+    int seconds = 4;
+    // unsigned sample_rate = 22050;
+    unsigned sample_rate = 44100;
+    double my_pi = 3.14159;
+    size_t buf_size = seconds * sample_rate;
+
+    // allocate PCM audio buffer        
+    short * samples = malloc(sizeof(short) * buf_size);
+
+   printf("\nhere is freq %f\n", freq);
+    int i=0;
+    for(; i<buf_size; ++i) {
+        samples[i] = 32760 * sin( (2.f * my_pi * freq)/sample_rate * i );
+
+        freq += incr_freq;
+       //  incr_freq += incr_freq;
+       //  freq *= factor_freq;
+
+        if (100.0 > freq || freq > 5000.0) {
+
+            incr_freq *= -1.0f;
+        }
+    }
+
+    /* upload buffer to OpenAL */
+    alBufferData( internal_buffer, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
+    al_check_error("populating alBufferData");
+
+    free(samples);
+
+    /* Set-up sound source and play buffer */
+    // ALuint src = 0;
+    // alGenSources(1, &src);
+    // alSourcei(src, AL_BUFFER, internal_buffer);
+    alGenSources(1, & streaming_source[0]);
+    alSourcei(streaming_source[0], AL_BUFFER, internal_buffer);
+    // alSourcePlay(src);
+    alSourcePlay(streaming_source[0]);
+
+    // ---------------------
+
+    ALenum current_playing_state;
+    alGetSourcei(streaming_source[0], AL_SOURCE_STATE, & current_playing_state);
+    al_check_error("alGetSourcei AL_SOURCE_STATE");
+
+    while (AL_PLAYING == current_playing_state) {
+
+        printf("still playing ... so sleep\n");
+
+        sleep(1);   // should use a thread sleep NOT sleep() for a more responsive finish
+
+        alGetSourcei(streaming_source[0], AL_SOURCE_STATE, & current_playing_state);
+        al_check_error("alGetSourcei AL_SOURCE_STATE");
+    }
+
+    printf("end of playing\n");
+
+    /* Dealloc OpenAL */
+    MM_exit_al();
+
+}   //  MM_render_one_buffer
+
+
+
+
 int main(void) {
-		
-		//Obj_arr* enemies = load_enemies_ar();
-		//print_obj(random_enemy(0,100, enemies));
-		//print_array(enemies);
+
+		MM_init_al();
+
+		MM_render_one_buffer();
+				
 		ncurses_start();
 
 }
