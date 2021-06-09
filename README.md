@@ -31,11 +31,11 @@ The onus is stil on us to do everything else.
   
   3 
 
-## ToDO
+## Todo
 
-  [ ] Add make file to compilation 
+ * [ ] Add make file to compilation 
   
-  [ ] make sound be sycronized with space ship firing
+ * [ ] make sound be sycronized with space ship firing
   
   
   
