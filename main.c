@@ -23,7 +23,7 @@
 #endif
 
 /*
-	space game using c and Ncursesfor the terminal
+	Space game using c and Ncurses for the terminal
  
 	by Goran Topic
 

@@ -6,7 +6,7 @@
 #include "linked_list_obj.h"
 
 /*
- 	Libaray of definition of linked list for objects
+ 	Lib array of definition of linked list for objects
 	by Goran Topic
  */
 
